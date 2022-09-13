@@ -10,8 +10,6 @@ class USB {
         
         let count = libusb_get_device_list(ctx, &list)
         
-        print(count)
-        
         defer { libusb_free_device_list(list, 1) }
         guard let list = list else { return }
         
