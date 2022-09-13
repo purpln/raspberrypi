@@ -1,9 +1,9 @@
 import clibusb
 
-class USB {
+class Service {
     var ctx: OpaquePointer? = nil
     var open: OpaquePointer?
-    func search() {
+    func execute() {
         libusb_init(&ctx)
         
         var list: UnsafeMutablePointer<OpaquePointer?>?
@@ -14,8 +14,6 @@ class USB {
         guard let list = list else { return }
         
         let devices = (0 ..< count).compactMap { Device(pointer: list[$0]) }
-        
-        print(devices)
         
         guard var device = devices.first(where: \.dualshock) else { return }
         //A0:78:17:9D:90:1C

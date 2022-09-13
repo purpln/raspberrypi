@@ -22,8 +22,8 @@ struct Empty: Scene {
     }
     
     func execute() {
-        let usb = USB()
-        usb.search()
+        let service = Service()
+        service.execute()
     }
 }
 
