@@ -1,12 +1,6 @@
 import clibusb
 
-class app {
-    static let shared = app()
-    
-    func main() -> Void {
-        search()
-    }
-    
+class USB {
     var ctx: OpaquePointer? = nil
     var open: OpaquePointer?
     func search() {
@@ -29,8 +23,6 @@ class app {
         print(device.read(endpoint: 0x00, length: 256) ?? "nil")
         device.close()
     }
-    
-    static var main: Void { shared.main() }
 }
 
 struct Device {
