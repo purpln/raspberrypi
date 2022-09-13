@@ -15,6 +15,8 @@ class USB {
         
         let devices = (0 ..< count).compactMap { Device(pointer: list[$0]) }
         
+        print(devices)
+        
         guard var device = devices.first(where: \.dualshock) else { return }
         //A0:78:17:9D:90:1C
         device.open()
