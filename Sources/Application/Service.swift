@@ -17,7 +17,8 @@ class Service {
     }
     
     var logs: @convention(c) (OpaquePointer?, libusb_log_level, UnsafePointer<CChar>?) -> Void = { pointer, level, cstring in
-        guard let cstring = cstring else { return }
+        print("logs:", level)
+        guard let pointer = pointer, let cstring = cstring else { return }
         let string = String(cString: cstring)
         print(string)
     }
