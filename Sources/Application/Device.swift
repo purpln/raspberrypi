@@ -28,16 +28,16 @@ extension Device {
 }
 
 extension Device {
-    var configuration: Int32 {
+    var configuration: Int32? {
         get {
-            guard handle != nil else { return -1 }
+            guard handle != nil else { return nil }
             var config: Int32 = 0
-            assert(libusb_get_configuration(handle, &config) == 0)
+            guard libusb_get_configuration(handle, &config) == 0 else { return nil }
             return config
         }
         set {
-            guard handle != nil else { return }
-            assert(libusb_set_configuration(handle, newValue) == 0)
+            guard handle != nil, let value = newValue else { return }
+            guard libusb_set_configuration(handle, value) == 0 else { return }
         }
     }
 }
