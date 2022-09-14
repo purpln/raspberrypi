@@ -16,15 +16,16 @@ class Service {
         return devices
     }
     
+    var logs: @convention(c) (OpaquePointer?, libusb_log_level, UnsafePointer<CChar>?) -> Void = { pointer, level, cstring in
+        guard let cstring = cstring else { return }
+        let string = String(cString: cstring)
+        print(string)
+    }
+    
     func execute() {
-        let logs: @convention(c) (OpaquePointer?, libusb_log_level, UnsafePointer<CChar>?) -> Void = { pointer, level, cstring in
-            guard let cstring = cstring else { return }
-            print(String(cString: cstring))
-        }
-        
         var ctx: OpaquePointer? = nil
         libusb_init(&ctx)
-        libusb_set_log_cb(ctx, logs, 1)
+        libusb_set_log_cb(ctx, logs, 4)
         defer { libusb_exit(ctx) }
         
         do {
