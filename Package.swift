@@ -10,8 +10,6 @@ let package = Package(
         .executableTarget(name: "Application", dependencies: [
             .target(name: "Architecture"),
             .product(name: "clibusb", package: "libusb")
-        ], swiftSettings: [
-            .unsafeFlags(["-Xfrontend", "-experimental-hermetic-seal-at-link"])
         ], linkerSettings: [
             .linkedLibrary("usb-1.0", .when(platforms: [.linux]))
         ]),
