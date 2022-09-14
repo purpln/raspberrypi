@@ -16,7 +16,8 @@ struct Device {
 extension Device {
     mutating func open() throws {
         guard handle == nil else { throw Fault.failure("open no handle") }
-        guard libusb_open(pointer, &handle) == 0 else { print("error to open"); return }
+        let res = libusb_open(pointer, &handle)
+        guard res == 0 else { throw Fault.failure("open") }
     }
     
     mutating func close() throws {
