@@ -10,14 +10,13 @@ class Service {
         var devices: [Device] = []
         for int in (0 ..< count) {
             guard let pointer = list[int] else { continue }
-            devices.append(Device(pointer: pointer))
+            devices.append(try Device(pointer: pointer))
         }
         
         return devices
     }
     
     var logs: @convention(c) (OpaquePointer?, libusb_log_level, UnsafePointer<CChar>?) -> Void = { pointer, level, cstring in
-        print("logs:", level)
         guard let pointer = pointer, let cstring = cstring else { return }
         let string = String(cString: cstring)
         print(string)
@@ -26,13 +25,15 @@ class Service {
     func execute() {
         var ctx: OpaquePointer? = nil
         libusb_init(&ctx)
-        libusb_set_log_cb(ctx, logs, Int32(LIBUSB_LOG_CB_GLOBAL.rawValue))
         defer { libusb_exit(ctx) }
+        
+        libusb_set_log_cb(ctx, logs, Int32(LIBUSB_LOG_CB_GLOBAL.rawValue))
         
         do {
             guard var device = try devices(ctx: ctx).first(where: \.dualshock) else { throw Fault.failure("no dualshock") }
             try device.open()
             try device.detach()
+            try device.detach(auto: 1)
             device.configuration = 1
             
             print(device)

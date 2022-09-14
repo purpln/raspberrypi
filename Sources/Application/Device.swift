@@ -5,9 +5,10 @@ struct Device {
     let descriptor: libusb_device_descriptor
     var handle: OpaquePointer?
     
-    init(pointer: OpaquePointer) {
+    init(pointer: OpaquePointer) throws {
         var descriptor = libusb_device_descriptor()
-        let _ = libusb_get_device_descriptor(pointer, &descriptor)
+        let res = libusb_get_device_descriptor(pointer, &descriptor)
+        guard res == 0 else { throw Fault.failure("no descriptor") }
         self.pointer = pointer
         self.descriptor = descriptor
     }
@@ -15,7 +16,7 @@ struct Device {
 
 extension Device {
     mutating func open() throws {
-        guard handle == nil else { throw Fault.failure("open no handle") }
+        guard handle == nil else { throw Fault.failure("open handle") }
         let res = libusb_open(pointer, &handle)
         guard res == 0 else { throw Fault.failure("open") }
     }
@@ -43,8 +44,13 @@ extension Device {
 }
 
 extension Device {
+    func detach(auto: Int32) throws {
+        guard handle != nil else { throw Fault.failure("detach auto no handle") }
+        let res = libusb_set_auto_detach_kernel_driver(handle, auto)
+        guard res == 0 else { throw Fault.failure("detach auto") }
+    }
     func detach() throws {
-        guard handle == nil else { throw Fault.failure("detach no handle") }
+        guard handle != nil else { throw Fault.failure("detach no handle") }
         let res = libusb_detach_kernel_driver(handle, 0)
         guard res == 0 else { throw Fault.failure("detach") }
     }
@@ -52,13 +58,13 @@ extension Device {
 
 extension Device {
     func claim(interface: Int32) throws {
-        guard handle == nil else { throw Fault.failure("claim no handle") }
+        guard handle != nil else { throw Fault.failure("claim no handle") }
         let res = libusb_claim_interface(handle, interface)
         guard res == 0 else { throw Fault.failure("claim") }
     }
     
     func release(interface: Int32) throws {
-        guard handle == nil else { throw Fault.failure("release no handle") }
+        guard handle != nil else { throw Fault.failure("release no handle") }
         let res = libusb_release_interface(handle, interface)
         guard res == 0 else { throw Fault.failure("release") }
     }
@@ -71,7 +77,7 @@ extension Device {//size - buffer size
         var count: Int32 = 0
         
         let res = libusb_bulk_transfer(handle, endpoint, &bytes, size, &count, 0)
-        guard res == 0 else { throw Fault.failure("\(res)") }
+        guard res == 0 else { throw Fault.failure("transfer") }
         return bytes
     }
     
