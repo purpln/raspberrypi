@@ -26,7 +26,7 @@ class Service {
     func execute() {
         var ctx: OpaquePointer? = nil
         libusb_init(&ctx)
-        libusb_set_log_cb(ctx, logs, 4)
+        libusb_set_log_cb(ctx, logs, Int32(LIBUSB_LOG_CB_GLOBAL.rawValue))
         defer { libusb_exit(ctx) }
         
         do {
