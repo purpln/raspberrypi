@@ -1,7 +1,7 @@
 import clibusb
 
 class Service {
-    func devices(ctx: OpaquePointer!) throws -> [Device] {
+    func devices(ctx: OpaquePointer?) throws -> [Device] {
         var list: UnsafeMutablePointer<OpaquePointer?>?
         defer { libusb_free_device_list(list, 1) }
         let count = libusb_get_device_list(ctx, &list)
@@ -32,12 +32,18 @@ class Service {
         do {
             guard var device = try devices(ctx: ctx).first(where: \.dualshock) else { throw Fault.failure("no dualshock") }
             try device.open()
-            try device.detach()
             try device.detach(auto: 1)
             device.configuration = 1
             
-            print(device)
+            print(device, device)
             
+            var numbers: UInt8 = 0
+            
+            print(libusb_get_port_numbers(device.pointer, &numbers, 0))
+            print(libusb_get_device_address(device.pointer))
+            print(libusb_get_max_packet_size(device.pointer, 0))
+            
+            try device.detach(interface: 0)
             try device.claim(interface: 0)
             let bytes = try device.read(endpoint: 0x00, size: 64)
             print(bytes ?? "nil")
