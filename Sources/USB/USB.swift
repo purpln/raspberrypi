@@ -1,4 +1,5 @@
 import clibusb
+import libusb
 
 public class USB {
     var ctx: OpaquePointer?
@@ -22,7 +23,7 @@ public class USB {
         defer { libusb_free_device_list(list, 1) }
         let count = libusb_get_device_list(ctx, &list)
         
-        guard let list = list else { throw Fault.failure("no list") }
+        guard let list = list else { throw Error.other }
         
         var devices: [Device] = []
         for int in (0 ..< count) {
@@ -40,10 +41,10 @@ public class USB {
     }
 }
 
-func execute(task: () -> Int32) throws {
-    let result = task()
-    guard result == LIBUSB_SUCCESS.rawValue else {
-        guard let error = USB.Error(rawValue: libusb_error(rawValue: result)) else { return }
+func execute(task: () throws -> Int32) throws {
+    let result = try task()
+    guard result == 0 else {
+        guard let error = Error(rawValue: result) else { return }
         throw error
     }
 }

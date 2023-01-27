@@ -33,11 +33,15 @@ struct Service: Scene {
                     try device.setting(interface: Int32(interface.number), setting: Int32(interface.setting))
                     
                     
-                    let endpoint = interface.endpoints[1]
+                    let endpoint = interface.endpoints[0]
                     
-                    let bytes = try device.read(endpoint: endpoint.address, size: Int32(endpoint.size))
-                    
-                    print(bytes ?? "nil")
+                    var reading: Bool = true
+                    repeat {
+                        let bytes = try device.read(endpoint: endpoint.address, size: Int32(endpoint.size))
+                        
+                        print(bytes ?? "nil")
+                    } while reading
+                                
                 } catch {
                     print("error", error)
                 }
@@ -81,7 +85,7 @@ struct Service: Scene {
     }
     
     func connect(device: Device, interface: Interface, closure: (Interface) throws -> Void) throws {
-        let active = device.kernel(interface: Int32(interface.number))
+        let active = try device.kernel(interface: Int32(interface.number))
         if active {
             try device.detach(interface: Int32(interface.number))
         }

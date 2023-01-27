@@ -55,80 +55,6 @@ public struct Device {
     }
 }
 
-extension Device {
-    public mutating func open() throws {
-        guard handle == nil else { throw Fault.failure("open handle") }
-        try execute {
-            libusb_open(pointer, &handle)
-        }
-    }
-    
-    public mutating func close() throws {
-        guard handle != nil else { throw Fault.failure("close no handle") }
-        libusb_close(handle)
-        handle = nil
-    }
-}
-
-extension Device {
-    public var configuration: Int32? {
-        get {
-            guard handle != nil else { return nil }
-            var config: Int32 = 0
-            guard libusb_get_configuration(handle, &config) > 0 else { return nil }
-            return config
-        }
-        set {
-            guard handle != nil, let value = newValue else { return }
-            guard libusb_set_configuration(handle, value) > 0 else { return }
-        }
-    }
-}
-
-extension Device {
-    public func detach(auto: Int32) throws {
-        guard handle != nil else { throw Fault.failure("detach auto no handle") }
-        try execute {
-            libusb_set_auto_detach_kernel_driver(handle, auto)
-        }
-    }
-    public func detach(interface: Int32) throws {
-        guard handle != nil else { throw Fault.failure("detach no handle") }
-        try execute {
-            libusb_detach_kernel_driver(handle, interface)
-        }
-    }
-    public func attach(interface: Int32) throws {
-        guard handle != nil else { throw Fault.failure("attach no handle") }
-        try execute {
-            libusb_attach_kernel_driver(handle, interface)
-        }
-    }
-    public func kernel(interface: Int32) -> Bool {
-        libusb_kernel_driver_active(handle, interface) == 1
-    }
-    public func setting(interface: Int32, setting: Int32) throws {
-        guard handle != nil else { throw Fault.failure("setting no handle") }
-        libusb_set_interface_alt_setting(handle, interface, setting)
-    }
-}
-
-extension Device {
-    public func claim(interface: Int32) throws {
-        guard handle != nil else { throw Fault.failure("claim no handle") }
-        try execute {
-            libusb_claim_interface(handle, interface)
-        }
-    }
-    
-    public func release(interface: Int32) throws {
-        guard handle != nil else { throw Fault.failure("release no handle") }
-        try execute {
-            libusb_release_interface(handle, interface)
-        }
-    }
-}
-
 extension Device {//size - buffer size
     public func read(endpoint: UInt8, size: Int32) throws -> [UInt8]? {
         guard handle != nil else { return nil }
@@ -156,42 +82,6 @@ extension Device {//size - buffer size
         try execute {
             libusb_interrupt_transfer(handle, endpoint, &data, bool ? Int32(size) : Int32(data.count), &written, timeout)
         }
-    }
-    
-    public func type() throws {
-        //libusb_endpoint_transfer_type
-    }
-}
-
-extension Device {
-    public func port() throws -> [UInt8] {
-        let depth: Int32 = 7
-        var numbers: [UInt8] = [UInt8](repeating: 0, count: Int(depth))
-        try execute {
-            libusb_get_port_numbers(pointer, &numbers, depth)
-        }
-        return numbers
-    }
-    
-    public func address() -> UInt8 {
-        libusb_get_device_address(pointer)
-    }
-    
-    public func speed() -> Speed? {
-        let speed = libusb_get_device_speed(pointer)
-        return Speed(rawValue: UInt8(speed))
-    }
-    
-    public func maxPacketSize(endpoint: UInt8) throws -> Int32 {
-        let result = libusb_get_max_packet_size(pointer, endpoint)
-        try execute {
-            result
-        }
-        return result
-    }
-    
-    public func maxIsoPacketSize() -> Int32 {
-        libusb_get_max_iso_packet_size(pointer, address())
     }
 }
 

@@ -1,3 +1,3 @@
-public enum Fault: Error {
+enum Fault: Error {
     case error, failure(String)
 }

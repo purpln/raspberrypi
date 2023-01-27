@@ -20,7 +20,8 @@ let package = Package(
             .product(name: "Loop", package: "loop"),
         ]),
         .target(name: "USB", dependencies: [
-            .product(name: "clibusb", package: "libusb")
+            .product(name: "clibusb", package: "libusb"),
+            .product(name: "libusb", package: "libusb")
         ], linkerSettings: [
             .linkedLibrary("usb-1.0", .when(platforms: [.linux]))
         ])
