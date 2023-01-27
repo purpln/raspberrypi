@@ -1,14 +1,14 @@
 public protocol Application {
-    associatedtype Content: Scene
-    var scene: Content { get }
+    associatedtype Content: Collection<any Scene>
+    var scenes: Content { get }
     
-    init()
-    static func main() async
+    init() async throws
+    static func main() async throws
 }
 
 extension Application {
-    public static func main() async {
-        var core = Core(Self.self)
-        await core.execute()
+    public static func main() async throws {
+        var core = try await Core(Self.self)
+        try await core.execute()
     }
 }

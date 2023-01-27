@@ -1,3 +1,4 @@
 public protocol Scene {
-    func process() async -> Int32
+    init() async throws
+    func execute() async throws
 }

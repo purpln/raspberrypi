@@ -1,19 +1,25 @@
+import Loop
+
 struct Core {
     var application: any Application
     
     private var executing: Bool = true
     
-    mutating func execute() async {
-        repeat {
-            switch await application.scene.process() {
-            case -1: executing = false
-            case 1: executing = false
-            default: break
+    mutating func execute() async throws {
+        for scene in application.scenes as any Collection {
+            guard let scene = scene as? Scene else { continue }
+            Task.detached {
+                do {
+                    try await scene.execute()
+                } catch {
+                    print(error)
+                }
             }
-        } while executing
+        }
+        await loop.run()
     }
     
-    init<T>(_ t: T.Type) where T: Application {
-        application = T()
+    init<T>(_ t: T.Type) async throws where T: Application {
+        application = try await T()
     }
 }

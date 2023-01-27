@@ -1,68 +1,107 @@
-import clibusb
+import Architecture
+import USB
 
-class Service {
-    func devices(ctx: OpaquePointer?) throws -> [Device] {
-        var list: UnsafeMutablePointer<OpaquePointer?>?
-        defer { libusb_free_device_list(list, 1) }
-        let count = libusb_get_device_list(ctx, &list)
-        guard let list = list else { throw Fault.failure("no list") }
-        
-        var devices: [Device] = []
-        for int in (0 ..< count) {
-            guard let pointer = list[int] else { continue }
-            devices.append(try Device(pointer: pointer))
-        }
-        
-        return devices
-    }
-    
-    var logs: @convention(c) (OpaquePointer?, libusb_log_level, UnsafePointer<CChar>?) -> Void = { pointer, level, cstring in
-        guard let pointer = pointer, let cstring = cstring else { return }
-        let string = String(cString: cstring)
-        print(string)
-    }
-    
+struct Service: Scene {
     func execute() {
-        var ctx: OpaquePointer? = nil
-        libusb_init(&ctx)
-        defer { libusb_exit(ctx) }
+        repeat {
+            guard let string = readLine() else { continue }
+            _ = string
+            do {
+                try scan()
+            } catch {
+                print(error)
+            }
+        } while true
+    }
+    
+    func scan() throws {
+        let service = USB()
         
-        libusb_set_log_cb(ctx, logs, Int32(LIBUSB_LOG_CB_GLOBAL.rawValue))
+        let devices = try service.devices()
         
-        do {
-            guard var device = try devices(ctx: ctx).first(where: \.dualshock) else { throw Fault.failure("no dualshock") }
-            try device.open()
-            try device.detach(auto: 1)
-            device.configuration = 1
-            
-            print(device, device)
-            
-            var numbers: UInt8 = 0
-            
-            print(libusb_get_port_numbers(device.pointer, &numbers, 0))
-            print(libusb_get_device_address(device.pointer))
-            print(libusb_get_max_packet_size(device.pointer, 0))
-            
-            try device.detach(interface: 0)
-            try device.claim(interface: 0)
-            let bytes = try device.read(endpoint: 0x00, size: 64)
-            print(bytes ?? "nil")
-            
-            try device.release(interface: 0)
-            try device.close()
-            
-        } catch Fault.failure(let string) {
-            print("error", string)
-        } catch {
-            print("error", error)
+        guard var device = devices.first(where: \.dualshock) else {
+            throw Fault.failure("no dualshock")
         }
+        
+        information(device: device)
+        
+        try connect(device: &device) { device in
+            let interface = device.configurations[0].interfaces[5]
+            
+            try connect(device: device, interface: interface) { interface in
+                do {
+                    try device.setting(interface: Int32(interface.number), setting: Int32(interface.setting))
+                    
+                    
+                    let endpoint = interface.endpoints[1]
+                    
+                    let bytes = try device.read(endpoint: endpoint.address, size: Int32(endpoint.size))
+                    
+                    print(bytes ?? "nil")
+                } catch {
+                    print("error", error)
+                }
+            }
+        }
+        /*
+        try device.open()
+        try device.detach(auto: 1)
+        device.configuration = 1
+        
+        try device.detach(interface: 0)
+        try device.claim(interface: 0)
+        let bytes = try? device.read(endpoint: 0x00, size: 64)
+        print(bytes ?? "nil")
+        
+        try device.release(interface: 0)
+        try device.close()
+        */
+    }
+    
+    func information(device: Device) {
+        print(device)
+        /*
+        print("speed", device.speed() ?? "nil")
+        let port = try? device.port()
+        print("port", port ?? "nil")
+        print("address", device.address())
+        let size = try? device.maxPacketSize(endpoint: 0x84)
+        print("max packet size", size ?? "nil")
+        */
+    }
+    
+    func connect(device: inout Device, closure: (Device) throws -> Void) throws {
+        try device.open()
+        defer {
+            do {
+                try device.close()
+            } catch { }
+        }
+        try closure(device)
+    }
+    
+    func connect(device: Device, interface: Interface, closure: (Interface) throws -> Void) throws {
+        let active = device.kernel(interface: Int32(interface.number))
+        if active {
+            try device.detach(interface: Int32(interface.number))
+        }
+        defer {
+            if active {
+                do {
+                    try device.attach(interface: Int32(interface.number))
+                } catch { }
+            }
+        }
+        try device.claim(interface: Int32(interface.number))
+        defer {
+            do {
+                try device.release(interface: Int32(interface.number))
+            } catch { }
+        }
+        try closure(interface)
     }
 }
 
-//A0:78:17:9D:90:1C
-//[UInt8](repeating: 0, count: Int(size)) || Array(repeating: UInt8(0), count: size) || UnsafeMutablePointer<UInt8>.allocate(capacity: Int(size))
-//&data == data.withUnsafeMutableBytes { $0.baseAddress!.assumingMemoryBound(to: UInt8.self) }
-
 extension Device {
-    var dualshock: Bool { descriptor.idVendor == 0x054c && descriptor.idProduct == 0x09cc }
+    var dualshock: Bool { vendor == 0x054c && product == 0x09cc }
 }
