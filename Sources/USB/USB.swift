@@ -7,7 +7,7 @@ public class USB {
     public init() {
         libusb_init(&ctx)
         
-        libusb_set_log_cb(ctx, logs, Int32(LIBUSB_LOG_CB_GLOBAL.rawValue))
+        libusb_set_log_cb(nil, logs, Int32(LIBUSB_LOG_CB_GLOBAL.rawValue))
     }
     
     deinit {

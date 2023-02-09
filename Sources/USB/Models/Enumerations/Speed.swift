@@ -1,10 +1,10 @@
 public enum Speed: UInt8, Equatable, Hashable, CustomStringConvertible {
-    case unknown = 0x00
-    case low = 0x01
-    case full = 0x02
-    case high =  0x04
-    case `super` = 0x08
-    case plus = 0x10
+    case unknown = 0x00 //LIBUSB_SPEED_UNKNOWN
+    case low = 0x01 //LIBUSB_SPEED_LOW
+    case full = 0x02 //LIBUSB_SPEED_FULL
+    case high =  0x04 //LIBUSB_SPEED_HIGH
+    case `super` = 0x08 //LIBUSB_SPEED_SUPER
+    case plus = 0x10 //LIBUSB_SPEED_SUPER_PLUS
     
     public var description: String {
         switch self {

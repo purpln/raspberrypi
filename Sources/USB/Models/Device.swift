@@ -56,7 +56,7 @@ public struct Device {
 }
 
 extension Device {//size - buffer size
-    public func read(endpoint: UInt8, size: Int32) throws -> [UInt8]? {
+    public func interrupt_read(endpoint: UInt8, size: Int32) throws -> [UInt8]? {
         guard handle != nil else { return nil }
         let timeout: UInt32 = 1000
         var bytes = [UInt8](repeating: 0, count: Int(size))
@@ -68,21 +68,46 @@ extension Device {//size - buffer size
         return bytes
     }
     
-    public func write(endpoint: UInt8, data: inout [UInt8], padding bool: Bool = true, size: Int = 0) throws {
+    public func interrupt_write(endpoint: UInt8, bytes: inout [UInt8], padding bool: Bool = true, size: Int = 0) throws {
         guard handle != nil else { return }
         let timeout: UInt32 = 1000
         if bool {
-            let padding = size - data.count
+            let padding = size - bytes.count
             let actual = (0...padding).map { _ in UInt8(0) }
-            data.append(contentsOf: actual)
+            bytes.append(contentsOf: actual)
         }
         
         var written: Int32 = 0
         
+        let length = bool ? Int32(size) : Int32(bytes.count)
+        
         try execute {
-            libusb_interrupt_transfer(handle, endpoint, &data, bool ? Int32(size) : Int32(data.count), &written, timeout)
+            libusb_interrupt_transfer(handle, endpoint, &bytes, length, &written, timeout)
         }
     }
+    
+    /*
+    public func bulb(endpoint: UInt8, buffer: inout [UInt8], size: Int32) throws {
+        guard handle != nil else { return }
+        let timeout: UInt32 = 1000
+        
+        let callback: @convention(c) (UnsafeMutablePointer<libusb_transfer>?) -> Void = { transfer in
+            print("callback", transfer ?? "nil")
+        }
+        
+        var transfer = libusb_alloc_transfer(0)
+        libusb_fill_bulk_transfer(transfer, handle, endpoint, &buffer, size, callback, nil, timeout)
+        libusb_submit_transfer(transfer)
+        
+        var completed: Int32 = 0
+        
+        repeat {
+            try execute {
+                libusb_handle_events_completed(pointer, &completed)
+            }
+        } while completed == 1
+    }
+    */
 }
 
 extension libusb_config_descriptor {

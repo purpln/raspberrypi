@@ -9,7 +9,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/purpln/loop.git", branch: "main"),
-        .package(url: "https://github.com/purpln/libusb.git", branch: "main")
+        .package(url: "https://github.com/purpln/libusb.git", branch: "main"),
+        //.package(url: "https://github.com/karwa/swift-url", from: "0.4.0")
     ],
     targets: [
         .executableTarget(name: "Application", dependencies: [

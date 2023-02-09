@@ -9,7 +9,7 @@ struct Service: Scene {
             do {
                 try scan()
             } catch {
-                print(error)
+                print("error:", error)
             }
         } while true
     }
@@ -26,6 +26,20 @@ struct Service: Scene {
         information(device: device)
         
         try connect(device: &device) { device in
+            let interface = device.configurations[0].interfaces[2]
+            
+            try connect(device: device, interface: interface) { interface in
+                do {
+                    try device.setting(interface: Int32(interface.number), setting: Int32(interface.setting))
+                    
+                    
+                    
+                } catch {
+                    print("error:", error)
+                }
+            }
+            
+            /*
             let interface = device.configurations[0].interfaces[5]
             
             try connect(device: device, interface: interface) { interface in
@@ -35,17 +49,15 @@ struct Service: Scene {
                     
                     let endpoint = interface.endpoints[0]
                     
-                    var reading: Bool = true
-                    repeat {
-                        let bytes = try device.read(endpoint: endpoint.address, size: Int32(endpoint.size))
-                        
-                        print(bytes ?? "nil")
-                    } while reading
+                    let bytes = try device.interrupt_read(endpoint: endpoint.address, size: Int32(endpoint.size))
+                    
+                    print(bytes ?? "nil")
                                 
                 } catch {
-                    print("error", error)
+                    print("error:", error)
                 }
             }
+            */
         }
         /*
         try device.open()
