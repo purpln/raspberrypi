@@ -11,7 +11,7 @@ public enum Transfer: UInt8, Equatable, Hashable, CustomStringConvertible {
         case .isochronous: return "isochronous"
         case .bulk: return "bulk"
         case .interrupt: return "interrupt"
-        case .stream: return "stream"
+        case .stream: return "bulk stream"
         }
     }
 }

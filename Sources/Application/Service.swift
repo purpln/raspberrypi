@@ -26,14 +26,16 @@ struct Service: Scene {
         information(device: device)
         
         try connect(device: &device) { device in
-            let interface = device.configurations[0].interfaces[2]
+            let interface = device.configurations[0].interfaces[5]
             
             try connect(device: device, interface: interface) { interface in
                 do {
                     try device.setting(interface: Int32(interface.number), setting: Int32(interface.setting))
                     
+                    let endpoint = interface.endpoints[1]
                     
-                    
+                    var bytes: [UInt8] = []
+                    try device.bulb(usb: service, endpoint: endpoint.address, buffer: &bytes, size: Int32(endpoint.size))
                 } catch {
                     print("error:", error)
                 }

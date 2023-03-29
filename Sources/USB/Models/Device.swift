@@ -86,28 +86,64 @@ extension Device {//size - buffer size
         }
     }
     
-    /*
-    public func bulb(endpoint: UInt8, buffer: inout [UInt8], size: Int32) throws {
+    
+    public func bulb(usb: USB, endpoint: UInt8, buffer: inout [UInt8], size: Int32) throws {
         guard handle != nil else { return }
         let timeout: UInt32 = 1000
         
         let callback: @convention(c) (UnsafeMutablePointer<libusb_transfer>?) -> Void = { transfer in
-            print("callback", transfer ?? "nil")
+            print("callback")
+            guard let transfer = transfer?.pointee else { return }
+            print(transfer.buffer.pointee)
         }
-        
-        var transfer = libusb_alloc_transfer(0)
-        libusb_fill_bulk_transfer(transfer, handle, endpoint, &buffer, size, callback, nil, timeout)
-        libusb_submit_transfer(transfer)
         
         var completed: Int32 = 0
         
+        let transfer = libusb_alloc_transfer(0)
+        libusb_fill_bulk_transfer(transfer, handle, endpoint, &buffer, size, callback, &completed, timeout)
+        try execute {
+            libusb_submit_transfer(transfer)
+        }
+        
         repeat {
+            print("loop")
+            try execute {
+                libusb_handle_events_completed(usb.ctx, &completed)
+            }
+        } while completed == 1
+        
+        /*
+        if libusb_try_lock_events(usb.ctx) == 0 {
+            print("try")
+        } else {
+            print("no try")
+        }
+        
+        var time: timeval = .init()
+        
+        libusb_lock_event_waiters(usb.ctx)
+        
+        if libusb_event_handler_active(usb.ctx) != 0 {
+            libusb_wait_for_event(usb.ctx, &time)
+        }
+        
+        libusb_unlock_event_waiters(usb.ctx)
+        
+        print("murr")
+        
+        if libusb_try_lock_events(pointer) == 0 {
+            print("try")
+        } else {
+            print("no try")
+        }
+        repeat {
+            print("loop")
             try execute {
                 libusb_handle_events_completed(pointer, &completed)
             }
         } while completed == 1
+         */
     }
-    */
 }
 
 extension libusb_config_descriptor {

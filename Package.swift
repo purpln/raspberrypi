@@ -11,11 +11,13 @@ let package = Package(
         .package(url: "https://github.com/purpln/loop.git", branch: "main"),
         .package(url: "https://github.com/purpln/libusb.git", branch: "main"),
         //.package(url: "https://github.com/karwa/swift-url", from: "0.4.0")
+        .package(url: "https://github.com/purpln/xml.git", branch: "main"),
     ],
     targets: [
         .executableTarget(name: "Application", dependencies: [
             .target(name: "Architecture"),
-            .target(name: "USB")
+            .target(name: "USB"),
+            .product(name: "XML", package: "xml"),
         ]),
         .target(name: "Architecture", dependencies: [
             .product(name: "Loop", package: "loop"),
